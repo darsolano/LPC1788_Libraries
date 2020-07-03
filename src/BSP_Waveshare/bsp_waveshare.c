@@ -250,6 +250,19 @@ static void wsBoard_UARTx_SetBaudRate(LPC_USART_T *UARTx, int BaudRate){
 /*****************************************************************************
  * Public functions
  ****************************************************************************/
+uint8_t wsBoard_UART_Get_Interrupt_Index(LPC_USART_T*USARTx){
+
+	if (USARTx == LPC_UART0)
+		return UART0_IRQn;
+	if (USARTx == LPC_UART1)
+		return UART1_IRQn;
+	if (USARTx == LPC_UART2)
+		return UART2_IRQn;
+	if (USARTx == LPC_UART3)
+		return UART3_IRQn;
+	return 0;
+}
+
 
 /* Initialize UART pins */
 void wsBoard_UART_Init(LPC_USART_T *pUART)

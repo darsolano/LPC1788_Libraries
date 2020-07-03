@@ -716,8 +716,7 @@ void cli_init(const char* startup_str)
     {
         xputs(startup_str);
     	xprintf("lpcXpresso LPC1769 running @ %dMhz\n",
-    			//CLKPWR_GetCLK(CLKPWR_CLKTYPE_CPU) / 1000000);
-    			Chip_Clock_GetSystemClockRate());
+    			Chip_Clock_GetSystemClockRate()/ 1000000);
     }
 
     // Display start up help advice

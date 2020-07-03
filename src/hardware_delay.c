@@ -41,6 +41,7 @@ void initTimer0(uint32_t freq)
 	TIMER0->TCR = 0x02; //Reset Timer
 }
 
+
 /*
  * Enable timer and start counting the specified freq.
  */

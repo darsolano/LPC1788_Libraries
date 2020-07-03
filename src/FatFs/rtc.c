@@ -29,13 +29,13 @@ int rtc_initialize (void)
 
 	/* Set current time for RTC */
 	/* Current time is 8:00:00PM, 2013-01-31 */
-	rtcTime.time[RTC_TIMETYPE_SECOND]     = 0;
-	rtcTime.time[RTC_TIMETYPE_MINUTE]     = 0;
-	rtcTime.time[RTC_TIMETYPE_HOUR]       = 20;
-	rtcTime.time[RTC_TIMETYPE_DAYOFMONTH] = 31;
-	rtcTime.time[RTC_TIMETYPE_MONTH]      = 1;
-	rtcTime.time[RTC_TIMETYPE_YEAR]       = 2013;
-	Chip_RTC_SetFullAlarmTime(LPC_RTC, &rtcTime);
+//	rtcTime.time[RTC_TIMETYPE_SECOND]     = 0;
+//	rtcTime.time[RTC_TIMETYPE_MINUTE]     = 0;
+//	rtcTime.time[RTC_TIMETYPE_HOUR]       = 20;
+//	rtcTime.time[RTC_TIMETYPE_DAYOFMONTH] = 31;
+//	rtcTime.time[RTC_TIMETYPE_MONTH]      = 1;
+//	rtcTime.time[RTC_TIMETYPE_YEAR]       = 2013;
+//	Chip_RTC_SetFullAlarmTime(LPC_RTC, &rtcTime);
 
 	/* Enable rtc (starts increase the tick counter and second counter register) */
 	Chip_RTC_Enable(LPC_RTC, ENABLE);

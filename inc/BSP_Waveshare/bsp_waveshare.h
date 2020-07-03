@@ -118,6 +118,14 @@ void wsBoard_UART_Init(LPC_USART_T *pUART);
 
 
 /**
+ * @brief	Get the interrupt index of the UART device
+ * @param	pUART	: Pointer to UART module
+ * @return	UART interrupt index
+ */
+uint8_t wsBoard_UART_Get_Interrupt_Index(LPC_USART_T*USARTx);
+
+
+/**
  * @brief	Initialize pin muxing for SSP interface
  * @param	pSSP	: Pointer to SSP interface to initialize
  * @return	Nothing
