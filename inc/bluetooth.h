@@ -46,7 +46,7 @@ typedef enum{
 	BT_NOT_CONN=1,
 	BT_CONN=2,
 	BT_AT_MODE=3,
-	BT_ALREADY_CONN
+	BT_ALREADY_CONN=4
 }BT_STATE_t;
 
 typedef struct{
@@ -62,19 +62,33 @@ typedef struct{
 	int baudrate;			// Baudrate speed of USART
 }BT_CMD_t;
 
-void bt_init(BT_CMD_t* bt, LPC_USART_T* USARTx, int baudrate);
+
+
+
+/*
+ * Initialize UART and internal parameters
+ * indicate UART device and baudrate
+ * If no connection, it will try with other Baudrates
+ * if response is OK then init process is OK
+ * return True or False on response
+ */
+Bool bt_init(BT_CMD_t* bt, LPC_USART_T* USARTx, int baudrate);
 
 /*
  * Send AT command to BT module
  * if response is OK then is alive.
- * return the pointer to response buffer
+ * return True or False on response
+ * pointer to string to response
+ * is on struct buffer, data_buffer
  */
-char* bt_Is_Alive(BT_CMD_t* bt);
+Bool bt_Is_Alive(BT_CMD_t* bt);
 
 /*
  * Send AT+Version to the module
  * response OKLinvorV1.8
- * return pointer to string responded
+ * return True or False on result
+ * pointer to string to response
+ * is on struct buffer, data_buffer
  */
 char* bt_Get_Version(BT_CMD_t* bt);
 
@@ -97,7 +111,7 @@ char* bt_ChangePIN(BT_CMD_t* bt, const char* pin);
  * remember that once the BT is connected all data
  * sent to modulo will pass thru to tty
  */
-//uint8_t* bt_SetDataBaudRate(uint8_t baud);
+char* bt_Change_Baudrate(BT_CMD_t* bt, int baud);
 
 /*
  * Use to monitor the state machine for the module

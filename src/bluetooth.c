@@ -476,12 +476,21 @@ static CMD_TYPE_t comm_scan_baudrate(BT_CMD_t* bt){
 	char* ptr;
 	for (br=0;br<12;br++){
 		bt->baudrate = Baud_Table[br];
-		init_uart(bt);
+		Chip_UART_SetBaud(Ux , bt->baudrate);
 		bt_GetDataStruct(bt, AT);
 		ptr = parse_hc06_command(bt);
 		if ( !memcmp (ptr, (const char*)"OK", 2) ){			// compare the first 2 char from data buffer to OK
 			return br+1;
 		}
+	}
+	return 0;
+}
+
+static CMD_TYPE_t get_baudrate_type (int baudrate){
+	CMD_TYPE_t brt;
+	for (brt=0; brt<12; brt++){
+		if (Baud_Table[brt] == baudrate)
+			return (brt+1);
 	}
 	return 0;
 }
@@ -493,7 +502,7 @@ static CMD_TYPE_t comm_scan_baudrate(BT_CMD_t* bt){
 /*
  *BT need to be disconnected from host or data will pass thru
  */
-void bt_init(BT_CMD_t* bt, LPC_USART_T* USARTx, int baudrate)
+Bool bt_init(BT_CMD_t* bt, LPC_USART_T* USARTx, int baudrate)
 {
 	__disable_irq();
 	Lclbtx = bt;
@@ -503,12 +512,24 @@ void bt_init(BT_CMD_t* bt, LPC_USART_T* USARTx, int baudrate)
 	bt->data_buffer = bt_data_buff;
 	initTimer0(1000);
 	init_uart(bt);
+	if (!bt_Is_Alive(bt)){
+		if (!comm_scan_baudrate(bt)){
+			return FALSE;
+		}
+		else {
+			xsprintf(bt_data_buff, "Connected @ %d: ", bt->baudrate);
+			return true;
+		}
+	}
+	return true;
 }
 
 
-char* bt_Is_Alive(BT_CMD_t* bt){
+Bool bt_Is_Alive(BT_CMD_t* bt){
 	bt_GetDataStruct(bt, AT);
-	return parse_hc06_command(bt);
+	memset(bt->data_buffer, 0, BT_DATA_BUFF);
+	if ( !memcmp (bt->data_buffer, (const char*)"OK", 2) ) return TRUE;
+	else return FALSE;
 }
 
 
@@ -521,6 +542,7 @@ char* bt_Get_Version(BT_CMD_t* bt){
 }
 
 char*  bt_ChangeDisplayName(BT_CMD_t* bt, const char* name){
+
 	if (CMD_LEN(name) > 20)
 		return ("Name Too long...");	// Name string lenght can not be greater than 20 bytes
 	if (bt->bt_state != BT_AT_MODE)
@@ -540,16 +562,38 @@ char*  bt_ChangeDisplayName(BT_CMD_t* bt, const char* name){
 
 
 char* bt_ChangePIN(BT_CMD_t* bt, const char* pin){
-	if (CMD_LEN(pin) > 4)
-		return ("PIN Too long...");	// Name string lenght can not be greater than 4 bytes
+
 	if (bt->bt_state != BT_AT_MODE)
 		return ("CMD Change PIN - Not AT Mode...");
+	if (CMD_LEN(pin) > 4)
+		return ("PIN Too long...");	// Name string lenght can not be greater than 4 bytes
+
 	bt_GetDataStruct(bt, ATPIN);
+
 	memset(bt_cmd_buffer, 0, BT_DATA_BUFF);
+
 	strcat (bt_cmd_buffer, bt->cmd);
 	strcat (bt_cmd_buffer, pin);
+
 	bt->cmd_len = CMD_LEN(bt_cmd_buffer);
 	bt->cmd = bt_cmd_buffer;
+	return parse_hc06_command(bt);
+}
+
+
+char* bt_Change_Baudrate(BT_CMD_t* bt, int baud){
+
+	if (bt->bt_state != BT_AT_MODE)
+		return ("CMD Change Baud Rate - Not AT Mode...");
+	if (baud > 1382400)
+		return ("BaudRate Too high, not supported...");	// Baud rate greater than 1382400, max rate
+
+	CMD_TYPE_t cmd_type = get_baudrate_type(baud);
+
+	bt_GetDataStruct(bt, cmd_type);
+
+	memset(bt->data_buffer, 0, BT_DATA_BUFF);			// Clean data buffer to get proper response content
+
 	return parse_hc06_command(bt);
 }
 
