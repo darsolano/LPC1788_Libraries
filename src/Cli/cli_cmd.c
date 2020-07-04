@@ -8,7 +8,7 @@
 #include <string.h>
 #include <Cli/cli.h>
 #include <Cli/cli_cmd.h>
-#include <datetime.h>
+#include <LPC_RTC_CALENDAR.h>
 #include <monitor.h>
 #include <Cli/vt100.h>
 #include <data_Manager/at45d.h>
@@ -228,72 +228,65 @@ static const char* cli_cmd_rtc_set_fn(u8_t argc, char* argv[]) {
 
 
 static const char* cli_cmd_rtc_set_time_fn(u8_t argc, char* argv[]) {
-	RTCTIME_s time;
+	LPCRTCDateTime time;
+	lpcrtc_getDateTime(&time);
 	if (argc != 0) {
 		// Get arguments from command line
 		cli_util_argv_to_u8(0, 0, 23);
-		time.HOUR = cli_argv_val.u8;
+		time.hour = cli_argv_val.u8;
 		cli_util_argv_to_u8(1, 0, 59);
-		time.MIN = cli_argv_val.u8;
+		time.minute = cli_argv_val.u8;
 		cli_util_argv_to_u8(2, 0, 59);
-		time.SEC = cli_argv_val.u8;
+		time.second = cli_argv_val.u8;
 
 		// set the time on RTC on chip
-		SetClock_Time(&time);
-		time.TIME_TYPE = _24HOUR;
-		GetClock_Time(&time);
+		lpcrtc_setDateTime(time.year, time.month, time.day, time.hour, time.minute, time.second);
+		lpcrtc_getDateTime(&time);
 
 		//Get time and print it back
-		xprintf("Time set@ %02d:%02d:%02d\n", time.HOUR, time.MIN, time.SEC);
+		xprintf("Time set@ %02d:%02d:%02d\n", time.hour, time.minute, time.second);
 		return "Time Set DONE...";
 	} else {
-		time.TIME_TYPE = _24HOUR;
-		GetClock_Time(&time);
+		lpcrtc_getDateTime(&time);
 		//Get time and print it back
-		xprintf("Time set@ %02d:%02d:%02d\n", time.HOUR, time.MIN, time.SEC);
+		xprintf("Time set@ %02d:%02d:%02d\n", time.hour, time.minute, time.second);
 		return "NO arguments received...";
 	}
 }
 
 static const char* cli_cmd_rtc_set_date_fn(u8_t argc, char* argv[]) {
-	RTCDATE_s date;
+	LPCRTCDateTime date;
 
 	if (argc != 0) {
-		GetClock_Date(&date);
+		lpcrtc_getDateTime(&date);
 
 		// Get arguments from command line
 		cli_util_argv_to_u8(0, 0, 31);
-		date.DOM = cli_argv_val.u8;
+		date.day = cli_argv_val.u8;
 		cli_util_argv_to_u8(1, 0, 12);
-		date.MONTH = cli_argv_val.u8;
+		date.month = cli_argv_val.u8;
 		cli_util_argv_to_u16(2, 0, 2099);
-		date.YEAR = cli_argv_val.u16;
+		date.year = cli_argv_val.u16;
 		cli_util_argv_to_u8(3, 1, 7);
-		date.DOW = cli_argv_val.u8;
+		date.dayOfWeek = cli_argv_val.u8;
 
-		SetCLock_Date(&date);
-		GetClock_Date(&date);
-		xprintf("Date set@ %02d/%02d/%02d %s %s\n", date.DOM, date.MONTH,
-				date.YEAR, date.sDOW, date.sMONTH);
+		lpcrtc_setDateTime(date.year, date.month, date.day, date.hour, date.minute, date.second);
+		lpcrtc_getDateTime(&date);
+		xprintf("%s\n", lpcrtc_dateFormat("d/m/Y D F", &date));
 		return "Date Set DONE...";
 	} else {
-		GetClock_Date(&date);
-		xprintf("Date set@ %02d/%02d/%02d %s %s\n", date.DOM, date.MONTH,
-				date.YEAR, date.sDOW, date.sMONTH);
+		lpcrtc_getDateTime(&date);
+		xprintf("%s\n", lpcrtc_dateFormat("d/m/Y D F", &date));
 		return "NO args received...";
 	}
 }
 
 static const char* cli_cmd_rtc_show_datetime_fn(u8_t argc, char* argv[]) {
-	RTCDATE_s date;
-	RTCTIME_s time;
+	LPCRTCDateTime dt;
 
-	time.TIME_TYPE = _24HOUR;
-	GetClock_Date(&date);
-	GetClock_Time(&time);
+	lpcrtc_getDateTime(&dt);
+	xprintf("%s\n", lpcrtc_dateFormat("d/M/Y D h:i:s a", &dt));
 
-	xprintf("%02d/%s/%02d %s %02d:%02d:%02d\n", date.DOM, date.sMONTH,
-			date.YEAR, date.sDOW, time.HOUR, time.MIN, time.SEC);
 	return NULL;
 }
 

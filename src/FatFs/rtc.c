@@ -35,7 +35,7 @@ int rtc_initialize (void)
 //	rtcTime.time[RTC_TIMETYPE_DAYOFMONTH] = 31;
 //	rtcTime.time[RTC_TIMETYPE_MONTH]      = 1;
 //	rtcTime.time[RTC_TIMETYPE_YEAR]       = 2013;
-//	Chip_RTC_SetFullAlarmTime(LPC_RTC, &rtcTime);
+//	Chip_RTC_SetFullTime(LPC_RTC, &rtcTime);
 
 	/* Enable rtc (starts increase the tick counter and second counter register) */
 	Chip_RTC_Enable(LPC_RTC, ENABLE);
@@ -72,7 +72,7 @@ int rtc_settime (const RTC *rtc)
 	rtcTime.time[RTC_TIMETYPE_MONTH]      = rtc->month;
 	rtcTime.time[RTC_TIMETYPE_YEAR]	      = rtc->year;
 
-	Chip_RTC_GetFullTime(LPC_RTC, &rtcTime);
+	Chip_RTC_SetFullTime(LPC_RTC, &rtcTime);
 
   return 1;
 }

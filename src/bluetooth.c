@@ -12,8 +12,7 @@
 #include <Cli/cli.h>
 #include <Cli/vt100.h>
 #include <monitor.h>
-#include <datetime.h>
-#include <FatFs/rtc.h>
+#include <LPC_RTC_CALENDAR.h>
 
 #define BTHC06_IntEventHandler	UART2_IRQHandler
 
@@ -517,7 +516,7 @@ Bool bt_init(BT_CMD_t* bt, LPC_USART_T* USARTx, int baudrate)
 			return FALSE;
 		}
 		else {
-			xsprintf(bt_data_buff, "Connected @ %d: ", bt->baudrate);
+			xsprintf(bt_data_buff, "Connected @: %d", bt->baudrate);
 			return true;
 		}
 	}
@@ -615,122 +614,73 @@ BT_STATE_t bt_ModuleMonitor(BT_CMD_t* bt)
 //************************************************************
 //			COMMAND DEFINITIONS
 //************************************************************
-static const char* bt_cmd_rtc_set_fn(u8_t argc, char* argv[]) {
-	// rtc set dd/mm/yyyy 13:12:00
-	RTC rtc;
-	char tmp[2];
-	char* ptr1,*ptr2;
-	long pData;
-	int i=0;
-	if (argc != 0) {
-		// Get arguments from command line
-//		xprintf("Argument 1 %s\n", argv[1]);
-		ptr2 = argv[0];
-		memcpy(tmp,ptr2,2);
-		ptr1 = tmp;
-		xatoi(&ptr1, &pData);
-		rtc.mday = (BYTE)pData;
-		while (*ptr2++ != '/');
-		memcpy(tmp,ptr2+i,2);
-		ptr1 = tmp;
-		xatoi(&ptr1, &pData);
-		rtc.month = (BYTE)pData;
-
-
-
-		xprintf("Argument 0 %s and Variable 1-> %u/%u\n", argv[0], rtc.mday,rtc.month);
-
-//		rtc.mday = (BYTE)tmpdata;
-//		while(*ptr++ != '/');
-//		++argv;
-//		xatoi(&ptr,&tmpdata);
-//		rtc.month = (BYTE)tmpdata;
-//		while(*ptr++ != '/');
-//		++argv;
-//		xatoi(&ptr, &tmpdata);
-//		rtc.year = (BYTE)tmpdata;
+//static const char* bt_cmd_rtc_set_fn(u8_t argc, char* argv[]) {
+//	// rtc set dd/mm/yyyy 13:12:00
 //
-//
-//		// set the time on RTC on chip
-//
-//		//Get time and print it back
-//		xprintf("Date set@ %02d:%02d:%02d\n", rtc.mday, rtc.month, rtc.year);
-//		return "Time Set DONE...";
-//	} else {
-//		//Get time and print it back
-//		return "NO arguments received...";
-	}
-	return NULL;
-}
+//	return NULL;
+//}
 
 
 static const char* bt_cmd_rtc_set_time_fn(u8_t argc, char* argv[]) {
-	RTCTIME_s time;
+	LPCRTCDateTime time;
+	lpcrtc_getDateTime(&time);
 	if (argc != 0) {
 		// Get arguments from command line
 		cli_util_argv_to_u8(0, 0, 23);
-		time.HOUR = cli_argv_val.u8;
+		time.hour = cli_argv_val.u8;
 		cli_util_argv_to_u8(1, 0, 59);
-		time.MIN = cli_argv_val.u8;
+		time.minute = cli_argv_val.u8;
 		cli_util_argv_to_u8(2, 0, 59);
-		time.SEC = cli_argv_val.u8;
+		time.second = cli_argv_val.u8;
 
 		// set the time on RTC on chip
-		SetClock_Time(&time);
-		time.TIME_TYPE = _24HOUR;
-		GetClock_Time(&time);
+		lpcrtc_setDateTime(time.year, time.month, time.day, time.hour, time.minute, time.second);
+		lpcrtc_getDateTime(&time);
 
 		//Get time and print it back
-		xprintf("Time set@ %02d:%02d:%02d\n", time.HOUR, time.MIN, time.SEC);
+		xprintf("Time set@ %02d:%02d:%02d\n", time.hour, time.minute, time.second);
 		return "Time Set DONE...";
 	} else {
-		time.TIME_TYPE = _24HOUR;
-		GetClock_Time(&time);
+		lpcrtc_getDateTime(&time);
 		//Get time and print it back
-		xprintf("Time set@ %02d:%02d:%02d\n", time.HOUR, time.MIN, time.SEC);
+		xprintf("Time set@ %02d:%02d:%02d\n", time.hour, time.minute, time.second);
 		return "NO arguments received...";
 	}
 }
 
 static const char* bt_cmd_rtc_set_date_fn(u8_t argc, char* argv[]) {
-	RTCDATE_s date;
+	LPCRTCDateTime date;
 
 	if (argc != 0) {
-		GetClock_Date(&date);
+		lpcrtc_getDateTime(&date);
 
 		// Get arguments from command line
 		cli_util_argv_to_u8(0, 0, 31);
-		date.DOM = cli_argv_val.u8;
-		cli_util_argv_to_u8(1, 1, 12);
-		date.MONTH = cli_argv_val.u8;
-		cli_util_argv_to_u16(2, 2000, 2099);
-		date.YEAR = cli_argv_val.u16;
+		date.day = cli_argv_val.u8;
+		cli_util_argv_to_u8(1, 0, 12);
+		date.month = cli_argv_val.u8;
+		cli_util_argv_to_u16(2, 0, 2099);
+		date.year = cli_argv_val.u16;
 		cli_util_argv_to_u8(3, 1, 7);
-		date.DOW = cli_argv_val.u8;
+		date.dayOfWeek = cli_argv_val.u8;
 
-		SetCLock_Date(&date);
-		GetClock_Date(&date);
-		xprintf("Date set@ %02d/%02d/%02d %s %s\n", date.DOM, date.MONTH,
-				date.YEAR, date.sDOW, date.sMONTH);
+		lpcrtc_setDateTime(date.year, date.month, date.day, date.hour, date.minute, date.second);
+		lpcrtc_getDateTime(&date);
+		xprintf("%s\n", lpcrtc_dateFormat("d/m/Y D F", &date));
 		return "Date Set DONE...";
 	} else {
-		GetClock_Date(&date);
-		xprintf("Date set@ %02d/%02d/%02d %s %s\n", date.DOM, date.MONTH,
-				date.YEAR, date.sDOW, date.sMONTH);
+		lpcrtc_getDateTime(&date);
+		xprintf("%s\n", lpcrtc_dateFormat("d/m/Y D F", &date));
 		return "NO args received...";
 	}
 }
 
 static const char* bt_cmd_rtc_show_datetime_fn(u8_t argc, char* argv[]) {
-	RTCDATE_s date;
-	RTCTIME_s time;
+	LPCRTCDateTime dt;
 
-	time.TIME_TYPE = _24HOUR;
-	GetClock_Date(&date);
-	GetClock_Time(&time);
+	lpcrtc_getDateTime(&dt);
+	xprintf("%s\n", lpcrtc_dateFormat("d/M/Y D h:i:s a", &dt));
 
-	xprintf("%02d/%s/%02d %s %02d:%02d:%02d\n", date.DOM, date.sMONTH,
-			date.YEAR, date.sDOW, time.HOUR, time.MIN, time.SEC);
 	return NULL;
 }
 
@@ -755,7 +705,7 @@ CLI_CMD_CREATE(bt_cmd_date_set, "date", 0, 4, "<dd mm yyyy day#> sun=1,...","Set
 CLI_CMD_CREATE(bt_cmd_time_show, "show", 0, 0, "", "Show current time and date on system rtc")
 //RTC commands grouped as RTC
 CLI_GROUP_CREATE(bt_group_rtc, "rtc")
-	CLI_CMD_ADD(bt_cmd_set, bt_cmd_rtc_set_fn)
+	//CLI_CMD_ADD(bt_cmd_set, bt_cmd_rtc_set_fn)
 	CLI_CMD_ADD(bt_cmd_time_set, bt_cmd_rtc_set_time_fn)
 	CLI_CMD_ADD(bt_cmd_date_set, bt_cmd_rtc_set_date_fn)
 	CLI_CMD_ADD(bt_cmd_time_show, bt_cmd_rtc_show_datetime_fn)
