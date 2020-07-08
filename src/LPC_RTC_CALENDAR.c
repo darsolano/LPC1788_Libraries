@@ -8,6 +8,7 @@
 #include <LPC_RTC_CALENDAR.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 
 /*
  * PRIVATE FUNCTION AND VARIABLES
@@ -30,7 +31,8 @@ static uint16_t dayInYear(uint16_t year, uint8_t month, uint8_t day);
 static bool 	isLeapYear(uint16_t year);
 static uint8_t 	dow(uint16_t y, uint8_t m, uint8_t d);
 
-static uint32_t unixtime(LPCRTCDateTime *t);
+static uint32_t	unixtime(LPCRTCDateTime *t);
+
 static uint8_t 	conv2d(const char* p);
 
 
@@ -611,13 +613,15 @@ static uint16_t date2days(uint16_t year, uint8_t month, uint8_t day)
 
 static uint32_t unixtime(LPCRTCDateTime *t)
 {
-    uint32_t u;
+	uint32_t u;
 
     u = time2long(date2days(t->year, t->month, t->day), t->hour, t->minute, t->second);
     u += 946681200;
 
     return u;
 }
+
+
 
 static uint8_t conv2d(const char* p)
 {

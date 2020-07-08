@@ -41,7 +41,7 @@ typedef struct
     uint8_t minute;
     uint8_t second;
     uint8_t dayOfWeek;
-    uint32_t unixtime;
+    long 	unixtime;
 }LPCRTCDateTime;
 
 

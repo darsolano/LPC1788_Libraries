@@ -638,12 +638,15 @@ static const char* bt_cmd_rtc_set_time_fn(u8_t argc, char* argv[]) {
 		lpcrtc_getDateTime(&time);
 
 		//Get time and print it back
-		xprintf("Time set@ %02d:%02d:%02d\n", time.hour, time.minute, time.second);
+
+		xprintf("%s\n", lpcrtc_dateFormat("h:i:s a", &time));
+		xprintf("%s\n", lpcrtc_dateFormat("H:i:s", &time));
 		return "Time Set DONE...";
 	} else {
 		lpcrtc_getDateTime(&time);
 		//Get time and print it back
-		xprintf("Time set@ %02d:%02d:%02d\n", time.hour, time.minute, time.second);
+		xprintf("%s\n", lpcrtc_dateFormat("h:i:s a", &time));
+		xprintf("%d\n", lpcrtc_dateFormat("U", &time));
 		return "NO arguments received...";
 	}
 }
